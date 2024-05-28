@@ -20,7 +20,7 @@ Resources:
       Environment:
         Variables:
           DYNAMODB_TABLE_NAME: !Ref HNStoriesTable
-          OPENAI_API_KEY: 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
+          OPENAI_API_KEY: # Add OpenAI key here
           JINA_READER_API_KEY: jina_713da6f618bb4eb9a40ba2957aa0ec7340jly5b2ZbEL91o4GXLvoiscmhfe
       Events:
         Api:
