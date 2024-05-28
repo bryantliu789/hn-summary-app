@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  hn-summary-app
+Transform:
+  - AWS::Serverless-2016-10-31
+
+Resources:
+  HNStorySummarizerFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: app.handler
+      Runtime: python3.9
+      CodeUri: .
+      MemorySize: 128
+      Timeout: 100
+      Description: A Lambda function that summarizes HN stories.
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref HNStoriesTable
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: !Ref HNStoriesTable
+          OPENAI_API_KEY: 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
+          JINA_READER_API_KEY: jina_713da6f618bb4eb9a40ba2957aa0ec7340jly5b2ZbEL91o4GXLvoiscmhfe
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /summarize
+            Method: GET
+
+  HNStoriesTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+
+  # For cloud monitoring
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Ref: ApplicationResourceGroup
+      AutoConfigurationEnabled: 'true'
+
+Outputs:
+  WebEndpoint:
+    Description: API Gateway endpoint URL for Prod stage
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+
+Globals:
+  Function:
+    Tracing: Active
+    LoggingConfig:
+      LogFormat: JSON
+  Api:
+    TracingEnabled: true
